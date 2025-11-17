@@ -17,23 +17,101 @@ editor_options:
   chunk_output_type: inline
 ---
 
-## Quarto
+## Screenshot of GitHub README.md
+(place holder)
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
+## Load required libraries
 ```{r}
-1 + 1
+library(tidyverse)
+library(sf)
+library(tmap)
+library(terra)
+library(stars)
 ```
 
-You can add options to executable code like this
+## Read data
 
 ```{r}
-#| echo: false
-2 * 2
+#| output: false
+#| warning: false
+#| message: false
+
+# Read sea surface temperature data
+sst_2008 <- read_stars(here::here('data', 'average_annual_sst_2008.tif'))
+sst_2009 <- read_stars(here::here('data', 'average_annual_sst_2009.tif'))
+sst_2010 <- read_stars(here::here('data', 'average_annual_sst_2010.tif'))
+sst_2011 <- read_stars(here::here('data', 'average_annual_sst_2011.tif'))
+sst_2012 <- read_stars(here::here('data', 'average_annual_sst_2012.tif'))
+
+# Read Bathymetry data
+depth <- read_stars(here::here('data', 'depth.tif'))
+
+# Read Exclusive Economic Zones data
+eec <- st_read(here::here('data', 'wc_regions_clean.shp'))
+
+```
+```{r}
+prj_text <- readLines(here::here('data', 'wc_regions_clean.prj'))
+cat(prj_text)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+
+## Prepare data
+
+To start, we need to load all necessary data and make sure it has the coordinate reference system.
+
+shapefile for the West Coast EEZ
+bathymetry raster
+SST rasters
+combine SST rasters into a raster stack
+
+```{r}
+# Assign CRS for ocean depth
+ocean_depth <- depth %>% st_set_crs(4326)
+
+# Combine SST rasters into a raster stack and change CRS
+sst_stack <- c(sst_2008, sst_2009, sst_2010, sst_2011, sst_2012,
+               along = list(year = 2008:2012)) %>% st_set_crs(4326)
+```
+
+```{r}
+# find the mean SST from 2008-2012 (e.g. create single raster of average SST)
+sst_mean <- st_apply(sst_stack, c("x", "y"), mean, na.rm = TRUE)
+
+# convert average SST from Kelvin to Celsius
+# hint: subtract by 273.15
+sst_celsius <- sst_mean - 273.15
+
+cat("\nConverted SST range (Celsius):\n")
+print(range(sst_celsius[[1]], na.rm = TRUE))
+```
+
+```{r}
+# crop depth raster to match the extent of the SST raster
+
+cat("Original depth extent:\n")
+print(st_bbox(ocean_depth))
+cat("\nSST extent:\n")
+print(st_bbox(sst_celsius))
+
+# Convert to terra
+ocean_depth_terra <- rast(ocean_depth)
+sst_terra <- rast(sst_celsius)
+
+# Crop (very fast)
+depth_cropped_terra <- crop(ocean_depth_terra, sst_terra)
+
+# Convert back to stars
+depth_cropped <- st_as_stars(depth_cropped_terra)
+
+```
+
+
+
+
+
+
+
+
+
+

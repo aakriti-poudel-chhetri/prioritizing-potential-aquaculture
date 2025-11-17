@@ -1,50 +1,47 @@
-## Identifying the impacts of extreme weather
+## Prioritizing potential aquaculture
 
-This repository contains the details of the assignment 2 for the course EDS 223: Geospatial Analysis & Remote Sensing for the Master of Environmental Data Science (MEDS) program.
+This repository contains the details of the assignment 4 for the course EDS 223: Geospatial Analysis & Remote Sensing for the Master of Environmental Data Science (MEDS) program.
 
-The assignment focuses on identifying the impacts of a series of extreme winter storms in the Houston metropolitan area, Texas.
+The assignment focuses on determining which Exclusive Economic Zones (EEZ) on the West Coast of the US are best suited to developing marine aquaculture for several species of oysters and a species of our choice.
 
 ### Background
 
-Climate change is increasing the frequency and severity of extreme weather events, leading to devastating impacts. In February 2021, Texas experienced a major power crisis caused by three severe winter storms that swept across the United States on February 10–11, 13–17, and 15–20.
-
-This assignment aims to identify the impacts of these extreme winter storms by estimating the number of homes in the Houston metropolitan area that lost power and examining whether these impacts were disproportionately distributed. The analysis is based on remotely sensed night light data.
+Marine aquaculture has the potential to play an important role in the global food supply as a more sustainable protein option than land-based meat production. [Gentry et al.](https://www.nature.com/articles/s41559-017-0257-9) mapped the potential for marine aquaculture globally based on multiple constraints, including ship traffic, dissolved oxygen, and bottom depth. They found that global seafood demand could be met using less than 0.015% of the global ocean area2.
 
 All analysis were done on R version 4.5.1 using the following libraries tidyverse, sf, here and tmap.
 
 ### Objective of the assignment
 
--   Create a set of maps comparing night light intensities before and after the first two storms
--   Create a map of the homes in Houston that lost power
--   Estimate of the number of homes in Houston that lost power
--   Create a map of the census tracts in Houston that lost power
--   Create a plot that compares the distributions of median household income between census tracts that did and did not experience blackouts
--   Summarize the results and discuss any limitations of this study in 100 words.
+Determine the Exclusive Economic Zones (EEZ) on the West Coast of the US best suited to develop marine aquaculture for several species of oysters and a species of our choice. For this,
+- create a function that has the following characteristics:
+  - arguments:
+      minimum and maximum sea surface temperature
+      minimum and maximum depth
+      species name
+  - outputs:
+      map of EEZ regions colored by amount of suitable area
+        species name should be included in the map’s title
 
 ### Contents
 
-This repository contains the following files 1. .gitignore 2. impacts-of-extreme-weather.Rproj 3. .qmd 4. figs: visual representation that is derived from the raw data 5. README.md
+This repository contains the following files 1. .gitignore 2. prioritizing-potential-aquaculture.Rproj 3. aquaculture_analysis.qmd 4. figs: visual representation that is derived from the raw data 5. README.md
 
 **File Structure**
 
 ```
-impacts-of-extreme-weather
-└───figs/
-    └── before-after-storm.jpeg
-    └──README-screenshot.jpeg
-└───.gitignore
+EDS223-HW3
+└─── README.md
+└─── qmd/Rmd/Proj files
+└─── aquaculture_analysis.qmd # Name your file a title that is representative of your analysis!
+|   .gitignore
     └───data
-        └───gis_osm_buildings_a_free_1.gpkg
-        └───gis_osm_roads_free_1.gpkg
-        └───ACS_2019_5YR_TRACT_48_TEXAS.gdb
-            └───census tract gdb files
-        └───VNP46A1
-            └───VIIRS data files
-└───impacts-of-extreme-weather.Rproj
-└───README.md
-└───texas_blackout.html
-└───texas_blackout.pdf
-└───texas_blackout.qmd
+        └─── wc_regions_clean.shp
+        └─── depth.tif
+        └─── average_annual_sst_2008.tif
+        └─── average_annual_sst_2009.tif
+        └─── average_annual_sst_2010.tif
+        └─── average_annual_sst_2011.tif
+        └─── average_annual_sst_2012.tif
 ```
 
 ### Data
@@ -52,23 +49,21 @@ impacts-of-extreme-weather
 Due to its large size, the `data` folder is included in `.gitignore` and is not tracked by version control. For this assignment, the data were pre-downloaded and provided by the team. Details of the data sources and download links are as follows:
 
 #### Data download link
-To access the data, [click here](https://drive.google.com/file/d/1bTk62xwOzBqWmmT791SbYbHxnCdjmBtw/view)
+To access the data, [click here](https://drive.google.com/file/d/1u-iwnPDbe6ZK7wSFVMI-PpCKaRQ3RVmg/view)
 
 #### Data Source
 
-**Night lights**
-The NASA’s Worldview is explored for extracting the data around the day of the storm. There are several days with too much cloud cover to be useful, but 2021-02-07 and 2021-02-16 provides two clear, contrasting images to visualize the extent of the power outage in Texas.
+**Species**
+You can find information on species depth and temperature requirements on [SeaLifeBase](https://www.sealifebase.ca/search.php). We are thinking about the potential for marine aquaculture, so these species should have some reasonable potential for commercial consumption.
 
-VIIRS data is distributed through NASA’s [Level-1 and Atmospheric Archive & Distribution System Distributed Active Archive Center (LAADS DAAC)](https://ladsweb.modaps.eosdis.nasa.gov/). Many NASA Earth data products are distributed in 10x10 degree tiles in sinusoidal equal-area projection. Tiles are identified by their horizontal and vertical position in the grid. Houston lies on the border of tiles h08v05 and h08v06. These two tiles per date were pre-downloaded and provided by the team.
+**Sea Surface Temperature**
+We are using average annual sea surface temperature (SST) from the years 2008 to 2012 to characterize the average sea surface temperature within the region. The data we are working with was originally generated from [NOAA’s 5km Daily Global Satellite Sea Surface Temperature Anomaly v3.1.](https://coralreefwatch.noaa.gov/product/5km/index_5km_ssta.php)
 
-**Roads**
-We used Geofabrik’s download sites to retrieve a shapefile of all highways in Texas and prepared a [Geopackage (.gpkg file)](https://download.geofabrik.de/) containing just the subset of roads that intersect the Houston metropolitan area. 
+**Bathymetry**
+To characterize the depth of the ocean we are using the [General Bathymetric Chart of the Oceans (GEBCO).](https://www.gebco.net/data-products/gridded-bathymetry-data#area)
 
-**Houses**
-The data were downloaded from [Geofabrik](https://download.geofabrik.de/) and processed to create a GeoPackage containing only residential buildings within the Houston metropolitan area.
-
-**Socioeconomic**
-The socioecoomic data were obtained from the [U.S. Census Bureau’s American Community Survey](https://www.census.gov/programs-surveys/acs) for census tracts in 2019.
+**Exclusive Economic Zones**
+We designate maritime boundaries using Exclusive Economic Zones off of the west coast of US from [Marineregions.org.](https://www.marineregions.org/eez.php)
 
 ### Course Information
 
@@ -81,6 +76,6 @@ Teaching Team:
 -   **Instructor:** [Annie Adams](https://github.com/annieradams)
 -   **Teaching Assistant:** [Alessandra Vidal Meza](https://avidalmeza.com/)
 
-Complete description for the homework can be found on the [Assignment-3](https://eds-223-geospatial.github.io/assignments/HW3.html)
+Complete description for the homework can be found on the [Assignment-4](https://eds-223-geospatial.github.io/assignments/HW4.html)
 
 #### **Author**: Aakriti Poudel

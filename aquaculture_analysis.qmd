@@ -47,23 +47,26 @@ sst_2012 <- read_stars(here::here('data', 'average_annual_sst_2012.tif'))
 depth <- read_stars(here::here('data', 'depth.tif'))
 
 # Read Exclusive Economic Zones data
-eec <- st_read(here::here('data', 'wc_regions_clean.shp'))
+eez <- st_read(here::here('data', 'wc_regions_clean.shp'))
 
 ```
+```{r}
+crs(eez)
+```
+
+
 ```{r}
 prj_text <- readLines(here::here('data', 'wc_regions_clean.prj'))
 cat(prj_text)
 ```
 
-
 ## Prepare data
 
 To start, we need to load all necessary data and make sure it has the coordinate reference system.
-
-shapefile for the West Coast EEZ
-bathymetry raster
-SST rasters
-combine SST rasters into a raster stack
+- shapefile for the West Coast EEZ
+- bathymetry raster
+- SST rasters
+- combine SST rasters into a raster stack
 
 ```{r}
 # Assign CRS for ocean depth
@@ -75,10 +78,10 @@ sst_stack <- c(sst_2008, sst_2009, sst_2010, sst_2011, sst_2012,
 ```
 
 ```{r}
-# find the mean SST from 2008-2012 (e.g. create single raster of average SST)
+# Find the mean SST from 2008-2012 (e.g. create single raster of average SST)
 sst_mean <- st_apply(sst_stack, c("x", "y"), mean, na.rm = TRUE)
 
-# convert average SST from Kelvin to Celsius
+# Convert average SST from Kelvin to Celsius
 # hint: subtract by 273.15
 sst_celsius <- sst_mean - 273.15
 
@@ -87,7 +90,21 @@ print(range(sst_celsius[[1]], na.rm = TRUE))
 ```
 
 ```{r}
-# crop depth raster to match the extent of the SST raster
+plot(sst_mean)
+```
+
+```{r}
+plot(sst_celsius)
+```
+
+
+```{r}
+minmax(sst_celsius)
+```
+
+
+```{r}
+# Crop depth raster to match the extent of the SST raster
 
 cat("Original depth extent:\n")
 print(st_bbox(ocean_depth))
@@ -106,6 +123,9 @@ depth_cropped <- st_as_stars(depth_cropped_terra)
 
 ```
 
+```{r}
+plot(depth_cropped)
+```
 
 
 

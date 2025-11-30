@@ -1,4 +1,4 @@
-## Prioritizing potential aquaculture
+# Prioritizing potential aquaculture for Oyster and California Mussel
 
 This repository contains the details of the assignment 4 for the course
 EDS 223: Geospatial Analysis & Remote Sensing for the Master of
@@ -10,7 +10,7 @@ aquaculture for several species of Oysters and a California Mussel.
 
 ![](figs/combined_aquaculture_map.png)
 
-### Background
+## Background
 
 Marine aquaculture has the potential to play an important role in the
 global food supply as a more sustainable protein option than land-based
@@ -24,7 +24,7 @@ global ocean area2.
 All analysis were done on R version 4.5.1 using the following libraries
 tidyverse, sf, tmap, terra and kableExtra.
 
-### Objective of the assignment
+## Objective of the assignment
 
 Determine the Exclusive Economic Zones (EEZ) on the West Coast of the US
 best suited to develop marine aquaculture for several species of oysters
@@ -34,14 +34,14 @@ temperature minimum and maximum depth species name - outputs: map of EEZ
 regions colored by amount of suitable area species name should be
 included in the map’s title
 
-### Contents
+## Contents
 
 This repository contains the following files 1. .gitignore 2.
 prioritizing-potential-aquaculture.Rproj 3. aquaculture_analysis.qmd 4.
 figs: visual representation that is derived from the raw data 5.
 README.md
 
-**File Structure**
+### File Structure
 
 ```         
 EDS223-HW3
@@ -63,19 +63,19 @@ EDS223-HW3
           └─── average_annual_sst_2012.tif
 ```
 
-### Data
+## Data
 
 Due to its large size, the `data` folder is included in `.gitignore` and
 is not tracked by version control. For this assignment, the data were
 pre-downloaded and provided by the team. Details of the data sources and
 download links are as follows:
 
-#### Data download link
+### Data download link
 
 To access the data, [click
 here](https://drive.google.com/file/d/1u-iwnPDbe6ZK7wSFVMI-PpCKaRQ3RVmg/view)
 
-#### Data Source
+### Data Source
 
 **Species** You can find information on species depth and temperature
 requirements on [SeaLifeBase](https://www.sealifebase.ca/search.php). We
@@ -98,7 +98,7 @@ v3.1.](https://coralreefwatch.noaa.gov/product/5km/index_5km_ssta.php)
 Exclusive Economic Zones off of the west coast of US from
 [Marineregions.org.](https://www.marineregions.org/eez.php)
 
-### Course Information
+## Course Information
 
 -   **Course Title:** [EDS 223 - Geospatial Analysis & Remote
     Sensing](https://eds-223-geospatial.github.io/)
@@ -115,4 +115,4 @@ Teaching Team:
 Complete description for the homework can be found on the
 [Assignment-4](https://eds-223-geospatial.github.io/assignments/HW4.html)
 
-#### **Author**: Aakriti Poudel
+### **Author**: Aakriti Poudel

@@ -1,5 +1,5 @@
 ---
-title: "Prioritizing potential aquaculture"
+title: "Prioritizing potential aquaculture for Oyster and California Mussel"
 author: "Aakriti Poudel"
 date: "11/13/2025"
 format:

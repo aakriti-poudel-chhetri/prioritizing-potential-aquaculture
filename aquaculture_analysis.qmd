@@ -19,7 +19,7 @@ editor_options:
 
 ## Screenshot of GitHub README.md
 
-(place holder)
+![](data/README-screenshot.png)
 
 ## Load required libraries
 
@@ -108,6 +108,7 @@ cat("\nConverted SST range (Celsius):\n")
 print(range(sst_mean_celsius[[1]], na.rm = TRUE))
 
 ```
+
 **Crop depth raster to match the extent of the SST raster**
 
 ```{r}
@@ -207,6 +208,7 @@ if(st_crs(eez) == crs(sst_mean_celsius)) {
 }
 
 ```
+
 ```{r}
 # Transform economic zones data set to match raster CRS
 eez <- st_transform(eez, crs(sst_mean_celsius))
@@ -289,7 +291,7 @@ tmap_save(oyster_map, filename = "figs/oyster_eez_map.png", width = 10, height =
 
 ## Building a generalizable workflow
 
-Here, we’ll combine the  above workflow above into a single function to ensure the process is clear and reproducible.
+Here, we’ll combine the above workflow above into a single function to ensure the process is clear and reproducible.
 
 I will be determining which Exclusive Economic Zones (EEZ) on the West Coast of the US are best suited for developing marine aquaculture for **California mussel** *(Mytilus californianus)*. The suitable sea surface temperature (SST) is usually 8.6 - 14.3 degree Celsius and depth values is 0 - 30 meters for this species.
 
@@ -410,4 +412,3 @@ tmap_save(combined_map,
           filename = "figs/combined_aquaculture_map.png", 
           width = 14, height = 10, dpi = 300)
 ```
-

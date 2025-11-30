@@ -29,7 +29,6 @@ library(sf)
 library(tmap)
 library(terra)
 library(kableExtra)
-#library(stars)
 ```
 
 ## Read data
@@ -61,10 +60,15 @@ eez <- st_read(here::here('data', 'wc_regions_clean.shp'))
 ## Prepare data
 
 ```{r}
+#| output: false
+#| warning: false
+#| message: false
+
 # Check CRS for all data set
-print(paste0("The CRS for sst_stack is: ", st_crs(sst_stack)$epsg))
-print(paste0("The CRS for ocean depth is: ", st_crs(depth)$epsg))
-print(paste0("The CRS for eez is: ", st_crs(eez)$epsg))
+st_crs(sst_stack)
+st_crs(depth)
+st_crs(eez)
+
 ```
 
 ```{r}
@@ -77,6 +81,7 @@ print("Coordinate reference systems match!")
 } else {
 warning("Update coordinate reference systems to match!")
 }
+
 ```
 
 ## Process data
@@ -90,25 +95,39 @@ sst_mean <- app(sst_stack, mean, na.rm = TRUE)
 # Convert average SST from Kelvin to Celsius
 sst_mean_celsius <- sst_mean - 273.15
 
-cat("\nConverted SST range (Celsius):\n")
-print(range(sst_mean_celsius[[1]], na.rm = TRUE))
 ```
 
+```{r}
+#| echo: false
+#| output: false
+#| warning: false
+#| message: false
+
+# Check the converted SST range
+cat("\nConverted SST range (Celsius):\n")
+print(range(sst_mean_celsius[[1]], na.rm = TRUE))
+
+```
 **Crop depth raster to match the extent of the SST raster**
 
 ```{r}
+#| echo: false
+#| output: false
+#| warning: false
+#| message: false
+
+# Check ocean depth extent and SST mean celsius extent for cropping
 cat("Ocean depth extent:\n")
 print(st_bbox(depth))
 cat("\nSST mean celsius extent:\n")
 print(st_bbox(sst_mean_celsius))
 
-# Crop the ocean depth 
-depth_cropped <- crop(depth, ext(sst_mean_celsius))
-
 ```
 
 ```{r}
-plot(depth_cropped, downsample = 0)
+# Crop the ocean depth 
+depth_cropped <- crop(depth, ext(sst_mean_celsius))
+
 ```
 
 **Resample the depth data to match the resolution of the SST data using the nearest neighbor approach**
@@ -117,27 +136,9 @@ plot(depth_cropped, downsample = 0)
 # Resample the ocean depth data
 depth_resample <- resample(depth_cropped, sst_mean_celsius, method = 'near')
 
-# Check if they match using compareGeom (better for terra)
-compareGeom(depth_resample, sst_mean_celsius, stopOnError = FALSE)
-
-identical(ext(depth_resample), ext(sst_mean_celsius))
 ```
 
-
-```{r}
-# Method 2: all.equal with tolerance
-all.equal(ext(depth_resample), ext(sst_mean_celsius))
-```
-```{r}
-ext(depth_resample) == ext(sst_mean_celsius)
-```
-
-
-```{r}
-plot(depth_resample)
-```
-
-**Check that the ocean depth and SST match in resolution, extent and coordinate reference system** - Can the rasters be stacked?
+**Check that the ocean depth and SST match in resolution, extent and coordinate reference system** - *Can the rasters be stacked?*
 
 ```{r}
 # Can the rasters be stacked?
@@ -149,6 +150,7 @@ if(all.equal(ext(depth_resample), ext(sst_mean_celsius)) == TRUE &&
 } else {
   warning('Rasters cannot be stacked. Compatibility issue detected!')
 }
+
 ```
 
 ## Find suitable locations for Oysters
@@ -172,6 +174,14 @@ depth_classify_oysters <- classify(depth_resample, depth_reclass_oysters)
 # Find suitable locations 
 suitable_locations_oysters <- sst_classify_oysters * depth_classify_oysters
 
+```
+
+```{r}
+#| echo: false
+#| output: false
+#| warning: false
+#| message: false
+
 # Check
 unsuitable_oysters <- sum(values(suitable_locations_oysters) == 0, na.rm = TRUE)
 suitable_oysters <- sum(values(suitable_locations_oysters) == 1, na.rm = TRUE)
@@ -179,85 +189,7 @@ total_oysters <- unsuitable_oysters + suitable_oysters
 
 print(paste0("The unsuitable number of location for Oysters is: ", unsuitable_oysters))
 print(paste0("The suitable number of location for Oysters is: ", suitable_oysters))
-```
 
-```{r}
-plot(suitable_locations_oysters)
-```
-
-## Choose your own species
-
-***You can find information on species depth and temperature requirements on SeaLifeBase. Remember, we are thinking about the potential for marine aquaculture, so these species should have some reasonable potential for commercial consumption.*** 
-
-My species is **Atlantic Bay Scallop** ***(Argopecten irradians)***. They need the following conditions for optimal growth:
-- sea surface temperature: 24 - 26°C
-- depth range: 0 - 20 meters below sea level
-
-```{r}
-# Reclassify SST into locations that are suitable for Atlantic Bay Scallop
-sst_reclass_abs <- matrix(c(-Inf, 24, 0,
-                            24, 26, 1,
-                            26, Inf, 0), ncol = 3, byrow = TRUE)
-
-sst_classify_abs <- classify(sst_mean_celsius, sst_reclass_abs)
-
-depth_reclass_abs <- matrix(c(-Inf, -20, 0,
-                            0, 20, 1,
-                            20, Inf, 0), ncol = 3, byrow = TRUE)
-
-depth_classify_abs <- classify(depth_resample, depth_reclass_abs)
-
-# Find suitable locations 
-suitable_locations_abs <- sst_classify_abs * depth_classify_abs
-
-# Check
-unsuitable_abs <- sum(values(suitable_locations_abs) == 0, na.rm = TRUE)
-suitable_abs <- sum(values(suitable_locations_abs) == 1, na.rm = TRUE)
-#total_abs <- unsuitable_abs + suitable_abs
-
-print(paste0("The unsuitable number of location for Atlantic Bay Scallop is: ", unsuitable_abs))
-print(paste0("The suitable number of location for Atlantic Bay Scallop is: ", suitable_abs))
-
-```
-
-```{r}
-plot(suitable_locations_abs)
-```
-Mytilus californianus
-California mussel
-depth range usually 0 - 30 m
-8.6 - 14.3
-
-
-```{r}
-# Reclassify SST into locations that are suitable for California mussel
-sst_reclass_cm <- matrix(c(-Inf, 8.6, 0,
-                            8.6, 14.3, 1,
-                            14.3, Inf, 0), ncol = 3, byrow = TRUE)
-
-sst_classify_cm <- classify(sst_mean_celsius, sst_reclass_cm)
-
-depth_reclass_cm <- matrix(c(-Inf, -30, 0,
-                            0, 30, 1,
-                            30, Inf, 0), ncol = 3, byrow = TRUE)
-
-depth_classify_cm <- classify(depth_resample, depth_reclass_cm)
-
-# Find suitable locations 
-suitable_locations_cm <- sst_classify_cm * depth_classify_cm
-
-# Check
-unsuitable_cm <- sum(values(suitable_locations_cm) == 0, na.rm = TRUE)
-suitable_cm <- sum(values(suitable_locations_cm) == 1, na.rm = TRUE)
-total_cm <- unsuitable_cm + suitable_cm
-
-print(paste0("The unsuitable number of location for Atlantic Bay Scallop is: ", unsuitable_cm))
-print(paste0("The suitable number of location for Atlantic Bay Scallop is: ", suitable_cm))
-
-```
-
-```{r}
-plot(suitable_locations_cm)
 ```
 
 ## Determine the most suitable EEZ
@@ -265,7 +197,8 @@ plot(suitable_locations_cm)
 **Select suitable cells within West Coast EEZs**
 
 ```{r}
-#| output: true
+#| warning: true
+
 # Check and transform coordinate reference systems
 if(st_crs(eez) == crs(sst_mean_celsius)) {
   print("Coordinate reference systems match!")
@@ -273,31 +206,43 @@ if(st_crs(eez) == crs(sst_mean_celsius)) {
   warning("Updating coordinate reference systems to match!")
 }
 
+```
+```{r}
 # Transform economic zones data set to match raster CRS
 eez <- st_transform(eez, crs(sst_mean_celsius))
+
 ```
 
 ```{r}
-# Convert the eez polygons to raster using the regions ID
+# Convert the eez polygons to raster using the regions
 eez_raster <- rasterize(eez, suitable_locations_oysters, field = "rgn_id")
 
+```
+
+**Find area of grid cells**
+
+```{r}
 # Calculate the area in km square
 area_km2_cell <- cellSize(suitable_locations_oysters, unit = "km")
 
+```
+
+**Find the total suitable area within each EEZ**
+
+```{r}
 # Calculate the suitable area 
 suitable_area <- suitable_locations_oysters * area_km2_cell
 
 # Calculate suitable area for each eez polygons
 eez_suitable_area <- extract(suitable_area, eez, fun = "sum", na.rm = TRUE)
 
-# Add eez suitable area to the eez dataset
+# Add the eez suitable area to the eez dataset
 eez$suitable_area_km2 <- eez_suitable_area[, 2]
 
 # Sort by suitable area (descending)
 eez_rank <- eez[order(-eez$suitable_area_km2), ]
-```
 
-### Visualize the most suitable EEZ
+```
 
 ```{r}
 #| output: true
@@ -306,34 +251,163 @@ eez_df <- as.data.frame(eez_rank)[, c("rgn", "suitable_area_km2")]
 
 # Visualize the eez rank in table format
 kable(eez_df, 
-      caption = "<strong style='font-size: 14px; color: #2c3e50;'>Major Oyster Producing Economic Regions in West Coast, US</strong>",
-      col.names = c("Region", "Suitable Area (km²)"),
+      caption = "Suitable economic zones in West Coast for Oyster aquaculture",
+      col.names = c("Region", "Suitable area (per km²)"),
       digits = 2, 
       row.names = FALSE,
-      escape = FALSE,
       format.args = list(big.mark = ",")) %>% 
-  kable_styling(
-    bootstrap_options = c("striped", "hover", "condensed"),
-    full_width = FALSE,
-    position = "left",
-    font_size = 13
-  ) %>%
-  row_spec(0, bold = TRUE, color = "white", background = "darkolivegreen") %>%
-  column_spec(1, bold = TRUE, color = "black", width = "70%") %>%
-  column_spec(2, color = "black", width = "50%")
-  
+  kable_styling(full_width = FALSE, font_size = 11)
+
 ```
 
 ```{r}
-# Plot a map showing the most suitable EEZ
-tm_shape(eez_rank) +
-  tm_polygons( fill = "suitable_area_km2",
-               fill.scale = tm_scale(values = "plasma"),
-               fill.legend = tm_legend(title = "Suitable area (per km²)")) + tm_title(text = "West Coast EEZs Ranked by Suitable Area\nfor Oyster Aquaculture") +
+# Plot the suitability ranking for Oyster aquaculture
+oyster_map <- tm_shape(eez_rank) +
+  tm_polygons(fill = "suitable_area_km2",
+              fill.scale = tm_scale(values = "plasma"),
+              fill.legend = tm_legend(title = "Suitable area (per km²)",
+                                      fontface = "bold",
+                                      title.size = 0.8,
+                                      text.size = 0.6)) +
+  tm_title(text = "Suitability-based ranking of West Coast EEZs\n for Oyster aquaculture",
+           size = 0.9, fontface = "bold") +
   tm_graticules() +
-  tm_basemap("Esri.OceanBasemap", alpha = 0.7) +
-  tm_layout(inner.margins = c(0.02, 0.02, 0.02, 0.2), component.autoscale = FALSE)
+  tm_basemap(server = "Esri.OceanBasemap", alpha = 0.8) +
+  tm_layout(inner.margins = c(0.01, 0.01, 0.01, 0.1),
+            component.autoscale = FALSE)
+
+oyster_map
+
 ```
 
+```{r}
+#| echo: false
+# Save the map
+tmap_save(oyster_map, filename = "figs/oyster_eez_map.png", width = 10, height = 8, dpi = 300)
 
+```
+
+## Building a generalizable workflow
+
+Here, we’ll combine the  above workflow above into a single function to ensure the process is clear and reproducible.
+
+I will be determining which Exclusive Economic Zones (EEZ) on the West Coast of the US are best suited for developing marine aquaculture for **California mussel** *(Mytilus californianus)*. The suitable sea surface temperature (SST) is usually 8.6 - 14.3 degree Celsius and depth values is 0 - 30 meters for this species.
+
+```{r}
+# Function to find suitable aquaculture locations and create outputs
+aquaculture_location <- function(species_name, min_temp, max_temp,
+                                 min_depth, max_depth)
+  {
+  # Reclassify SST based on temperature range
+  sst_reclass <- matrix(c(-Inf, min_temp, 0,
+                          min_temp, max_temp, 1,
+                          max_temp, Inf, 0), 
+                        ncol = 3, byrow = TRUE)
+  sst_classify <- classify(sst_mean_celsius, sst_reclass)
+  
+  # Reclassify depth based on depth range
+  depth_reclass <- matrix(c(-Inf, min_depth, 0,
+                            min_depth, max_depth, 1,
+                            max_depth, Inf, 0), 
+                          ncol = 3, byrow = TRUE)
+  depth_classify <- classify(depth_resample, depth_reclass)
+  
+  # Find suitable locations
+  suitable_locations <- sst_classify * depth_classify
+  
+  # Convert EEZ polygons to raster
+  eez_raster <- rasterize(eez, suitable_locations, field = "rgn_id")
+  
+  # Calculate area in km²
+  area_km2_cell <- cellSize(suitable_locations, unit = "km")
+  
+  # Calculate suitable area
+  suitable_area <- suitable_locations * area_km2_cell
+  
+  # Calculate suitable area for each EEZ polygon
+  eez_suitable_area <- extract(suitable_area, eez, fun = "sum", na.rm = TRUE)
+  
+  # Add suitable area to EEZ dataset
+  eez$suitable_area_km2 <- eez_suitable_area[, 2]
+  
+  # Sort by suitable area (descending)
+  eez_rank <- eez[order(-eez$suitable_area_km2), ]
+  
+  # Convert to data frame and select columns
+  eez_df <- as.data.frame(eez_rank)[, c("rgn", "suitable_area_km2")]
+  
+  # Visualize the eez rank in table format
+  eez_table <- kable(eez_df, 
+                     caption = paste0("Suitable economic zones in West Coast for ", species_name, " aquaculture"),
+                     col.names = c("Region", "Suitable area (per km²)"),
+                     digits = 2, 
+                     row.names = FALSE,
+                     format.args = list(big.mark = ",")) %>% 
+    kable_styling(full_width = FALSE, font_size = 11)
+  
+  # Create suitability map
+  species_map <- tm_shape(eez_rank) +
+    tm_polygons(fill = "suitable_area_km2",
+                fill.scale = tm_scale(values = "plasma"),
+                fill.legend = tm_legend(title = "Suitable area (per km²)",
+                                        fontface = "bold",
+                                        title.size = 0.8,
+                                        text.size = 0.6)) +
+    tm_title(text = paste0("Suitability-based ranking of West Coast EEZs\n for ", 
+                          species_name, " aquaculture"),
+             size = 0.9, fontface = "bold") +
+    tm_graticules() +
+    tm_basemap(server = "Esri.OceanBasemap", alpha = 0.8) +
+    tm_layout(inner.margins = c(0.01, 0.01, 0.01, 0.1),
+              component.autoscale = FALSE)
+  
+  # Return both table and map as a list
+  return(list(table = eez_table, map = species_map))
+ }
+
+```
+
+## Apply function for species of choice
+
+```{r}
+# Apply function for California Mussel
+california_mussel <- aquaculture_location(species_name = "California Mussel",
+  min_temp = 8.6,
+  max_temp = 14.3,
+  min_depth = -30,
+  max_depth = 0)
+
+# Display the suitability table for California Mussel
+california_mussel$table
+```
+
+```{r}
+# Display the suitability map for California Mussel
+california_mussel$map
+
+```
+
+```{r}
+#| echo: false
+# Save the map
+california_mussel_map <- california_mussel$map
+tmap_save(california_mussel_map, filename = "figs/california_mussel_map.png", width = 10, height = 8, dpi = 300)
+
+```
+
+```{r}
+#| echo: false
+#| output: false
+#| warning: false
+#| message: false
+
+# Combine side-by-side
+combined_map <- tmap_arrange(oyster_map, california_mussel_map, ncol = 2)
+combined_map
+
+# Save combined map
+tmap_save(combined_map, 
+          filename = "figs/combined_aquaculture_map.png", 
+          width = 14, height = 10, dpi = 300)
+```
 

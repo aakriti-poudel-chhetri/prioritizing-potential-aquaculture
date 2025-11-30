@@ -48,6 +48,7 @@ EDS223-HW3
 └─── README.md
 └─── prioritizing-potential-aquaculture.Rproj
 └─── aquaculture_analysis.qmd
+└─── aquaculture_analysis.pdf
 └─── figs
       └─── california_mussel_map.png
       └─── combined_aquaculture_map.png

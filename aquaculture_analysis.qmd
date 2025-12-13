@@ -224,8 +224,11 @@ eez_raster <- rasterize(eez, suitable_locations_oysters, field = "rgn_id")
 **Find area of grid cells**
 
 ```{r}
+# Mask suitable locations to EEZ
+suitable_eez_oyster <- mask(suitable_locations_oysters, eez_raster)
+
 # Calculate the area in km square
-area_km2_cell <- cellSize(suitable_locations_oysters, unit = "km")
+area_km2_cell <- cellSize(suitable_eez_oyster, unit = "km")
 
 ```
 
@@ -320,8 +323,11 @@ aquaculture_location <- function(species_name, min_temp, max_temp,
   # Convert EEZ polygons to raster
   eez_raster <- rasterize(eez, suitable_locations, field = "rgn_id")
   
+  # Mask suitable locations to EEZ
+  suitable_eez <- mask(suitable_locations, eez_raster)
+  
   # Calculate area in km²
-  area_km2_cell <- cellSize(suitable_locations, unit = "km")
+  area_km2_cell <- cellSize(suitable_eez, unit = "km")
   
   # Calculate suitable area
   suitable_area <- suitable_locations * area_km2_cell
@@ -412,3 +418,17 @@ tmap_save(combined_map,
           filename = "figs/combined_aquaculture_map.png", 
           width = 14, height = 10, dpi = 300)
 ```
+
+# Reflection
+
+## Exclusive Economic Zones (EEZ) on the West Coast for Oysters
+Central California has the largest area suitable for oyster aquaculture with 4,923.15 sq.km., followed by Southern California (4,096.54 sq.km.) and Washington (3,224.74 sq.km.). All together, these three regions have more than 90% of the suitable oyster habitat in the EEZ on the West Coast. Oregon shows moderate potential with 1,533.09 sq.km., whereas Northern California has very limited suitable area of 438.15.
+
+## Exclusive Economic Zones (EEZ) on the West Coast for California Mussel
+Compared to the Oysters, California Mussel has moderate potential for aquaculture on the west coast. Washington has the highest potential with 3,603.10 sq.km. Second comes Central California with the potential of 1,843.34, third is Oregon with 1443.52 sq.km. followed by Northern California 1,155.22 sq.km. Southern California has very limited potential with 318.81 sq.km.
+
+# Potential limitations
+
+This analysis assesses the spatial extent of potential Oyster and California mussel aquaculture within the Exclusive Economic Zones (EEZ) along the U.S. West Coast based on environmental suitability. The analysis shows where oyster and California mussel aquaculture might be suitable, but it has several limitations. It does not consider real world constraints such as permits, marine protected areas, shipping routes or other ocean uses that could limit where aquaculture can actually occur. Social and economic factors like access to ports, infrastructure and markets were not included. Environmental conditions such as seasonal changes and long-term climate impacts were not considered. In addition, the data resolution may miss small scale local differences. Therefore, the results should be seen as a general overview, not exact locations for aquaculture development.
+
+
